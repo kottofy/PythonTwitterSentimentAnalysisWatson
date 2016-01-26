@@ -9,4 +9,5 @@ class Scored_Tweet(models.Model):
     username = ""
     tweet = ""
     score = ""
+    type = ""
 

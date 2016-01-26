@@ -1,8 +1,13 @@
 ﻿from TwitterSentimentAnalysis.settings import *
-import urllib
+import urllib.request
+import urllib.parse
 import json
+import logging
 
 def get_sentiment_analysis(tweets):
+
+    LOG_FILENAME = "log.txt"
+    logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
 
     #scores = []
     
@@ -20,28 +25,43 @@ def get_sentiment_analysis(tweets):
 
         try:
             # send POST request to url with encoded data
-            response = urllib.request.urlopen(timeline_endpoint, data = urllib.parse.urlencode(data_dictionary).encode("utf-8"))
 
-            # read the response - gets bytes
-            response_info = response.read()
+            #https://docs.python.org/3.4/howto/urllib2.html
+            data = urllib.parse.urlencode(data_dictionary)
+            data = data.encode('ascii')
+            req = urllib.request.Request(timeline_endpoint, data)
+            with urllib.request.urlopen(req) as response:
+                response_info = response.read()
+
+            #response = urllib.request.Request(timeline_endpoint, data = urllib.parse.urlencode(data_dictionary).encode("utf-8"))
+            ##response = urllib.request.urlopen(timeline_endpoint, data = urllib.parse.urlencode(data_dictionary).encode("utf-8"))
+            #logging.info(logging.time.clock())
+            logging.info("sent POST request and got response")
+
+            # read the response - gets bytes 
+            #response_info = response.read()
+            logging.info("read the response")
 
             #convert response to json
             readable_info_json = json.loads(response_info.decode(encoding='UTF-8'))
+            logging.info( "converted response to json")
 
             #identify sentiment score!
             score = readable_info_json['docSentiment']['score']
+            polarity = readable_info_json['docSentiment']['type']
 
             #big hurrah!
             #print('got score:' + readable_info_json['docSentiment']['score'])
            
             tweet.score = score
-            
+            tweet.polarity = polarity
             #scores.append(score)
+            #logging.info(score)
 
         except Exception as m:
-            print('Error in getting Sentient Analysis score!')
+            print('Error in getting Sentiment Analysis score')
+            logging.error(m)
             tweet.score = "unable to score"
-            print(m)      
             pass
 
     return tweets
